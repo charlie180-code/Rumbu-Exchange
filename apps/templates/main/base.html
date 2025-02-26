@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='icons/font/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div class="container d-flex flex-column min-vh-100">
+        <div class="content flex-grow-1 py-4">
+            {% block content %}{% endblock %}
+        </div>
+
+        <div class="bg-light fixed-bottom py-2 shadow-lg">
+            <div class="d-flex justify-content-around text-center">
+                <!-- Home Tab -->
+                <a href="{{ url_for('main.home') }}" class="text-decoration-none flex-fill py-2">
+                    <i class="bi {% if title == 'Home' %}bi-house-fill selected-tab{% else %}bi-house text-dark{% endif %} fs-4"></i>
+                </a>
+
+                <!-- Wallet Tab -->
+                <a href="{{ url_for('main.wallet') }}" class="text-decoration-none flex-fill py-2">
+                    <i class="bi {% if title == 'Wallet' %}bi-wallet-fill selected-tab{% else %}bi-wallet text-dark{% endif %} fs-4"></i>
+                </a>
+
+                <!-- Transactions Tab -->
+                <a href="{{ url_for('main.transactions') }}" class="text-decoration-none flex-fill py-2">
+                    <i class="bi {% if title == 'Transactions' %}bi-clock-history selected-tab{% else %}bi-clock-history text-dark{% endif %} fs-4"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
