@@ -17,19 +17,16 @@
 
         <div class="bg-light fixed-bottom py-2 shadow-lg">
             <div class="d-flex justify-content-around text-center">
-                <!-- Home Tab -->
                 <a href="{{ url_for('main.home') }}" class="text-decoration-none flex-fill py-2">
-                    <i class="bi {% if title == 'Home' %}bi-house-fill selected-tab{% else %}bi-house text-dark{% endif %} fs-4"></i>
+                    <i class="bi {% if request.path == url_for('main.home') %}bi-house-fill selected-tab{% else %}bi-house text-dark{% endif %} fs-4"></i>
                 </a>
 
-                <!-- Wallet Tab -->
                 <a href="{{ url_for('main.wallet') }}" class="text-decoration-none flex-fill py-2">
-                    <i class="bi {% if title == 'Wallet' %}bi-wallet-fill selected-tab{% else %}bi-wallet text-dark{% endif %} fs-4"></i>
+                    <i class="bi {% if request.path == url_for('main.wallet') %}bi-wallet-fill selected-tab{% else %}bi-wallet text-dark{% endif %} fs-4"></i>
                 </a>
 
-                <!-- Transactions Tab -->
                 <a href="{{ url_for('main.transactions') }}" class="text-decoration-none flex-fill py-2">
-                    <i class="bi {% if title == 'Transactions' %}bi-clock-history selected-tab{% else %}bi-clock-history text-dark{% endif %} fs-4"></i>
+                    <i class="bi {% if request.path == url_for('main.transactions') %}bi-clock-history selected-tab{% else %}bi-clock-history text-dark{% endif %} fs-4"></i>
                 </a>
             </div>
         </div>
