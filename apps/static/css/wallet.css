@@ -23,3 +23,12 @@
     background: #1a0461;
     color: #fff;
 }
+
+.wallet-provider-selector{
+    padding: 12px 12px;
+}
+
+
+strong{
+    font-family: 'Poppins', sans-serif;
+}

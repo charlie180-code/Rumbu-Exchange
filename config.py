@@ -13,6 +13,7 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     BABEL_DEFAULT_LOCALE = 'fr'
+    SERVICES_PRICES_PATH = './apps/insights/prices/service_prices.json'
     BABEL_SUPPORTED_LOCALES = ['en', 'fr', 'de', 'zh', 'ru', 'tr']
     BABEL_TRANSLATION_DIRECTORIES = './translations'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

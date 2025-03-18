@@ -1,6 +1,111 @@
 {% extends "main/base.html" %}
-
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                </svg>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 {% block content %}
-    <h1>Home</h1>
-    <p>Welcome to the Home Screen!</p>
+<div class="bg-dark-blue rounded-5 px-1Z py-4">
+    <div class="d-flex justify-content-between align-items-center px-4">
+        <div class="d-flex align-items-center">
+            <div>
+                {% if user_info.profile_picture %}
+                    <img src="{{ user_info.profile_picture }}" alt="Profile Picture" class="rounded-circle" width="50" height="50">
+                {% else %}
+                    <img src="{{ url_for('static', filename='feedbacks/account_circle.svg') }}" alt="Placeholder Image" class="rounded-circle" width="40" height="40">
+                {% endif %}
+            </div>
+            <div class="ms-1">
+                <p class="mb-0 text-white" style="font-size: 0.9rem;">{{ _('Salut') }}, {{ user_info.name }}</p>
+            </div>
+        </div>
+        <div>
+            <a href="">
+                <i class="bi bi-gear-fill text-white" style="font-size: 1.5rem;"></i>
+            </a>
+        </div>
+    </div>
+    <div class="bg-dark-blue text-white p-5 rounded-lg shadow-lg glass-effect">
+        <div class="text-center">
+            <p class="mb-1 opacity-25">{{ _('solde') }}</p>
+            <h1 class="mb-4">
+                <span>{{ user_info.balance }}</span>
+                <span style="font-size: 1rem;">{{ user_info.currency }}</span>
+            </h1>
+        </div>
+
+        <div class="d-flex justify-content-around">
+            <div class="text-center border-end pe-4">
+                <a href="" class="quick-action-links">
+                    <i class="bi bi-lightning-charge" style="font-size: 1.5rem;"></i>
+                    <p class="mt-1 mb-0">{{ _('Recharger') }}</p>
+                </a>
+            </div>
+            <div class="text-center border-end pe-4">
+                <a href="{{ url_for('api.pay_service') }}" class="quick-action-links">
+                    <i class="bi bi-cash-coin" style="font-size: 1.5rem;"></i>
+                    <p class="mt-1 mb-0">{{ _('Payer') }}</p>
+                </a>
+            </div>
+            <div class="text-center">
+                <a href="" class="quick-action-links">
+                    <i class="bi bi-send-fill" style="font-size: 1.5rem;"></i>
+                    <p class="mt-1 mb-0">{{ _('Transférer') }}</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Transactions -->
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">{{ _('Dernières transactions') }}</h4>
+        <a href="{{ url_for('main.transactions') }}" class="btn btn-link p-0">{{ _('Voir tout') }}</a>
+    </div>
+
+    <div class="list-group">
+        {% if latest_transactions %}
+            <div class="list-group">
+                {% for transaction in latest_transactions %}
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            {% if transaction.service == 'network' and transaction.service_provider == 'starlink' %}
+                                <img src="{{ url_for('static', filename='brands/starlink.png') }}" alt="{{ transaction.service_provider }} Logo" class="me-3" style="width: 45px; height: 45x;">
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-1">{{ transaction.service_provider | capitalize }}</h6>
+                                <small class="text-muted">{{ transaction.created_at.strftime('%d %B %Y %H:%M') }}</small>
+                                <span class="badge bg-{{ 'success' if transaction.status.value == 'done' else 'danger' if transaction.status.value == 'failed' else 'warning' }} text-xs mt-1">
+                                    {% if transaction.status.value == 'done' %}
+                                        {{ _('Effectué') }}
+                                    {% elif transaction.status.value == 'failed' %}
+                                        {{ _('Echec') }}
+                                    {% else %}
+                                        {{ _('En cours') }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="text-{{ 'success' if transaction.nature == 'income' else 'danger' }}">
+                            {{ '+' if transaction.nature == 'income' else '-' }} {{ transaction.amount }} {{ transaction.currency }}
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            {% include 'empty/no_transaction.html' %}
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

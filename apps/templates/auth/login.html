@@ -8,7 +8,7 @@
     <form method="POST" >
         {{ form.hidden_tag() }}
 
-        <img class="mb-4" src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ _('Uranus') }}" width="72" height="57">
+        <img class="mb-4" src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ _('Rumbu') }}" width="72" height="57">
         <h1 class="h3 mb-3 fw-normal text-center">{{ _('Connexion') }}</h1>
 
         <div class="form-floating mb-2">
@@ -48,7 +48,7 @@
         {{ form.submit(class="w-100 btn btn-md submit-btn", type="submit", value=_('Connexion')) }}
 
         <p class="mt-5 mb-3 text-body-secondary">{{ _('Vous n\'avez pas de compte ?') }} <a href="{{ url_for('auth.register') }}">{{ _('Inscrivez-vous') }}</a></p>
-        <p class="mt-5 mb-3 text-body-secondary">&copy; {{ year }} Uranus Payments Limited</p>
+        <p class="mt-5 mb-3 text-body-secondary">&copy; {{ year }} Rumbu Payments Limited</p>
     </form>
 </main>
 {% endblock %}

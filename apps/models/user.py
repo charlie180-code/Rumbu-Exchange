@@ -10,6 +10,7 @@ class User(db.Model, UserMixin):
     phone_number = db.Column(db.String)
     email = db.Column(db.String, unique=True, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
+    profile_picture = db.Column(db.String)
     gender = db.Column(db.String)
     date_of_birth = db.Column(db.Date, default=datetime.utcnow)
     member_since = db.Column(db.Date, default=datetime.utcnow)
