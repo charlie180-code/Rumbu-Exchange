@@ -14,6 +14,8 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     BABEL_DEFAULT_LOCALE = 'fr'
     SERVICES_PRICES_PATH = './apps/insights/prices/service_prices.json'
+    UPLOAD_FOLDER = 'static/uploads'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     BABEL_SUPPORTED_LOCALES = ['en', 'fr', 'de', 'zh', 'ru', 'tr']
     BABEL_TRANSLATION_DIRECTORIES = './translations'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
