@@ -1,12 +1,16 @@
-from flask import render_template, request
+from flask import render_template, request, flash, url_for, redirect, current_app
 from flask_login import login_required, current_user
 from ..models.user import User
 from ..models.transaction import Transaction
+import os
 from ..models.wallet import Wallet
 from flask_babel import _
 from .utils import fetch_nita_balance
 from . import main
 from datetime import datetime
+from werkzeug.utils import secure_filename
+from .. import db
+from .forms import UserSettingsForm
 
 @main.route('/')
 @login_required
@@ -24,8 +28,6 @@ def home():
 
     if current_user.first_name:
         name = current_user.first_name
-        if current_user.last_name:
-            name += ' ' + current_user.last_name
     elif current_user.last_name:
         name = current_user.last_name
     elif current_user.email:
@@ -77,7 +79,51 @@ def transactions():
         year=datetime.now().year
     )
     
-    
+@main.route('/user-settings', methods=['GET', 'POST'])
+@login_required
+def user_settings():
+    form = UserSettingsForm()
+
+    if request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        form.phone_number.data = current_user.phone_number
+        form.email.data = current_user.email
+        form.gender.data = current_user.gender
+        form.date_of_birth.data = current_user.date_of_birth
+        
+
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.phone_number = form.phone_number.data
+        current_user.email = form.email.data
+        current_user.gender = form.gender.data
+        current_user.date_of_birth = form.date_of_birth.data
+
+        if 'profile_picture' in request.files:
+            profile_picture = request.files['profile_picture']
+            if profile_picture.filename != '':
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'static/uploads')
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+
+                filename = secure_filename(profile_picture.filename)
+                file_path = os.path.join(upload_folder, filename)
+                profile_picture.save(file_path)
+
+                current_user.profile_picture = url_for('static', filename=f'uploads/{filename}')
+
+        db.session.commit()
+        flash(_('Vos paramètres ont été mis à jour!'), 'success')
+        return redirect(url_for('user.user_settings'))
+
+    return render_template(
+        'main/user_settings.html',
+        title=_('Paramètres'),
+        form=form
+    )
+
 
 @main.route('/terms-and-conditions')
 def terms_and_conditions():

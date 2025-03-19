@@ -32,3 +32,13 @@
 .badge{
     font-family: 'Poppins-light', sans-serif;
 }
+
+.btn-submit{
+    background: #270685;
+    color: #fff;
+}
+
+.btn-submit:hover{
+    background: #1a0461;
+    color: #fff;
+}
