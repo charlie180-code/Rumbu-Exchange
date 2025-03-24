@@ -211,7 +211,8 @@ def pay_service():
             flash(_('Invalid service type or provider'), 'error')
             return redirect(url_for('api.pay_service'))
 
-        # Add service fee (e.g., 10%)
+        # For simplicity, we'll just add 10% of the base price as the service fee
+        # Here we will need a function for converting the currency to default wallet currency
         service_fee = base_price * 0.1
         total_amount = base_price + service_fee
 
