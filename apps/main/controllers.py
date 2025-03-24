@@ -1,11 +1,12 @@
-from flask import render_template, request
+from flask import render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from ..models.user import User
 from ..models.transaction import Transaction
 from ..models.wallet import Wallet
 from flask_babel import _
-from .utils import fetch_nita_balance
+from .utils import fetch_nita_balance, fetch_mastercard_balance, fetch_mpesa_balance, fetch_paypal_balance, fetch_visa_balance
 from . import main
+from .. import db
 from datetime import datetime
 
 @main.route('/')
@@ -24,8 +25,6 @@ def home():
 
     if current_user.first_name:
         name = current_user.first_name
-        if current_user.last_name:
-            name += ' ' + current_user.last_name
     elif current_user.last_name:
         name = current_user.last_name
     elif current_user.email:
@@ -48,6 +47,47 @@ def home():
         latest_transactions=latest_transactions,
         year=datetime.now().year
     )
+    
+@main.route('/refresh_wallet_balance', methods=['POST'])
+def refresh_wallet_balance():
+    if not current_user.is_authenticated:
+        flash(_('Vous devez être connecté pour effectuer cette action'), 'danger')
+        return redirect(url_for('auth.login'))
+
+    wallet = Wallet.query.filter_by(
+        user_id=current_user.id,
+        selected=True
+    ).first()
+
+    if not wallet:
+        flash(_('Aucun portefeuille sélectionné'), 'danger')
+        return redirect(request.referrer or url_for('main.index'))
+
+    try:
+        if wallet.provider == 'Nita':
+            new_balance = fetch_nita_balance(wallet.phone_number, wallet.password)
+        elif wallet.provider == 'MPesa':
+            new_balance = fetch_mpesa_balance(wallet)
+        elif wallet.provider == 'Visa':
+            new_balance = fetch_visa_balance(wallet)
+        elif wallet.provider == 'Mastercard':
+            new_balance = fetch_mastercard_balance(wallet)
+        elif wallet.provider == 'PayPal':
+            new_balance = fetch_paypal_balance(wallet.email, wallet.password)
+        else:
+            flash(_('Fournisseur non supporté'), 'danger')
+            return redirect(request.referrer or url_for('main.home'))
+
+        wallet.balance = new_balance
+        db.session.commit()
+        
+        flash(_(f'Solde {wallet.provider} actualisée'), 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(_(f'Erreur lors de la mise à jour du solde: {str(e)}'), 'danger')
+    
+    return redirect(request.referrer or url_for('main.index'))
 
 @main.route('/wallet')
 @login_required
