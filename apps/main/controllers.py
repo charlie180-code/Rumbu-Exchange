@@ -1,12 +1,17 @@
-from flask import render_template, request
+from flask import render_template, request, flash, url_for, redirect, current_app
 from flask_login import login_required, current_user
 from ..models.user import User
 from ..models.transaction import Transaction
+import os
 from ..models.wallet import Wallet
 from flask_babel import _
-from .utils import fetch_nita_balance
+from .utils import fetch_nita_balance, fetch_mastercard_balance, fetch_mpesa_balance, fetch_paypal_balance, fetch_visa_balance
 from . import main
+from .. import db
 from datetime import datetime
+from werkzeug.utils import secure_filename
+from .. import db
+from .forms import UserSettingsForm
 
 @main.route('/')
 @login_required
@@ -24,8 +29,6 @@ def home():
 
     if current_user.first_name:
         name = current_user.first_name
-        if current_user.last_name:
-            name += ' ' + current_user.last_name
     elif current_user.last_name:
         name = current_user.last_name
     elif current_user.email:
@@ -48,6 +51,47 @@ def home():
         latest_transactions=latest_transactions,
         year=datetime.now().year
     )
+    
+@main.route('/refresh_wallet_balance', methods=['POST'])
+def refresh_wallet_balance():
+    if not current_user.is_authenticated:
+        flash(_('Vous devez être connecté pour effectuer cette action'), 'danger')
+        return redirect(url_for('auth.login'))
+
+    wallet = Wallet.query.filter_by(
+        user_id=current_user.id,
+        selected=True
+    ).first()
+
+    if not wallet:
+        flash(_('Aucun portefeuille sélectionné'), 'danger')
+        return redirect(request.referrer or url_for('main.index'))
+
+    try:
+        if wallet.provider == 'Nita':
+            new_balance = fetch_nita_balance(wallet.phone_number, wallet.password)
+        elif wallet.provider == 'MPesa':
+            new_balance = fetch_mpesa_balance(wallet)
+        elif wallet.provider == 'Visa':
+            new_balance = fetch_visa_balance(wallet)
+        elif wallet.provider == 'Mastercard':
+            new_balance = fetch_mastercard_balance(wallet)
+        elif wallet.provider == 'PayPal':
+            new_balance = fetch_paypal_balance(wallet.email, wallet.password)
+        else:
+            flash(_('Fournisseur non supporté'), 'danger')
+            return redirect(request.referrer or url_for('main.home'))
+
+        wallet.balance = new_balance
+        db.session.commit()
+        
+        flash(_(f'Solde {wallet.provider} actualisée'), 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(_(f'Erreur lors de la mise à jour du solde: {str(e)}'), 'danger')
+    
+    return redirect(request.referrer or url_for('main.index'))
 
 @main.route('/wallet')
 @login_required
@@ -77,7 +121,51 @@ def transactions():
         year=datetime.now().year
     )
     
-    
+@main.route('/user-settings', methods=['GET', 'POST'])
+@login_required
+def user_settings():
+    form = UserSettingsForm()
+
+    if request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        form.phone_number.data = current_user.phone_number
+        form.email.data = current_user.email
+        form.gender.data = current_user.gender
+        form.date_of_birth.data = current_user.date_of_birth
+        
+
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.phone_number = form.phone_number.data
+        current_user.email = form.email.data
+        current_user.gender = form.gender.data
+        current_user.date_of_birth = form.date_of_birth.data
+
+        if 'profile_picture' in request.files:
+            profile_picture = request.files['profile_picture']
+            if profile_picture.filename != '':
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'static/uploads')
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+
+                filename = secure_filename(profile_picture.filename)
+                file_path = os.path.join(upload_folder, filename)
+                profile_picture.save(file_path)
+
+                current_user.profile_picture = url_for('static', filename=f'uploads/{filename}')
+
+        db.session.commit()
+        flash(_('Vos paramètres ont été mis à jour!'), 'success')
+        return redirect(url_for('user.user_settings'))
+
+    return render_template(
+        'main/user_settings.html',
+        title=_('Paramètres'),
+        form=form
+    )
+
 
 @main.route('/terms-and-conditions')
 def terms_and_conditions():
